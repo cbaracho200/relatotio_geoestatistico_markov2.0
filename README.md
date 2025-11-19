@@ -1,0 +1,1 @@
+# relatotio_geoestatistico_markov2.0
