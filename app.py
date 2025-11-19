@@ -32,7 +32,7 @@ app.config['JSON_AS_ASCII'] = False
 
 # Variável global para armazenar dados
 GEOJSON_DATA = None
-GEOJSON_PATH = Path(__file__).parent / './data/PDU_VIX.parquet'
+GEOJSON_PATH = Path(__file__).parent / './data/renda_setores_vix.parquet'
 
 
 def load_geojson():
@@ -325,4 +325,5 @@ if __name__ == '__main__':
     print("\n🌐 Acesse: http://localhost:5000")
     print("=" * 60 + "\n")
     
+
     app.run(debug=True, host='0.0.0.0', port=5003)
