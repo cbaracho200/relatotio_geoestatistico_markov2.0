@@ -1,0 +1,417 @@
+/* ===========================================
+   MIVITA - Design Minimalista
+   =========================================== */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    /* Paleta Minimalista */
+    --color-primary: #1a1a1a;
+    --color-accent: #0066cc;
+    --color-success: #00b894;
+    --color-warning: #fdcb6e;
+    --color-danger: #d63031;
+    
+    /* Neutros */
+    --color-bg: #a4a2a2;
+    --color-bg-secondary: #e3e3e3;
+    --color-border: #e9ecef;
+    --color-text: #2d3436;
+    --color-text-light: #636e72;
+    
+    /* Dimensões */
+    --sidebar-width: 340px;
+    --spacing-xs: 0.5rem;
+    --spacing-sm: 0.75rem;
+    --spacing-md: 1rem;
+    --spacing-lg: 1.5rem;
+    --spacing-xl: 2rem;
+    
+    /* Tipografia */
+    --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-size-sm: 0.875rem;
+    --font-size-base: 0.9375rem;
+    --font-size-lg: 1.125rem;
+    
+    /* Outros */
+    --radius: 6px;
+    --transition: 0.2s ease;
+}
+
+body {
+    font-family: var(--font-sans);
+    font-size: var(--font-size-base);
+    color: var(--color-text);
+    background: var(--color-bg);
+    line-height: 1.6;
+    height: 100vh;
+    overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* ===========================================
+   SIDEBAR
+   =========================================== */
+
+.sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: var(--sidebar-width);
+    height: 100vh;
+    background: var(--color-bg);
+    border-right: 1px solid var(--color-border);
+    display: flex;
+    flex-direction: column;
+    z-index: 1000;
+    overflow-y: auto;
+}
+
+.sidebar-header {
+    padding: var(--spacing-xl) var(--spacing-lg);
+    border-bottom: 1px solid var(--color-border);
+    background: var(--color-bg);
+}
+
+.logo-container {
+    text-align: center;
+}
+
+.logo-img {
+    max-width: 180px;
+    height: auto;
+    display: block;
+    margin: 0 auto;
+}
+
+.tagline {
+    margin-top: var(--spacing-sm);
+    font-size: var(--font-size-sm);
+    color: var(--color-text-light);
+    font-weight: 400;
+    letter-spacing: 0.5px;
+}
+
+.sidebar-content {
+    padding: var(--spacing-lg);
+    flex: 1;
+}
+
+/* ===========================================
+   CONTROLES
+   =========================================== */
+
+.control-group {
+    margin-bottom: var(--spacing-lg);
+}
+
+.control-group label {
+    display: block;
+    margin-bottom: var(--spacing-xs);
+    font-size: var(--font-size-sm);
+    font-weight: 500;
+    color: var(--color-text);
+    letter-spacing: 0.3px;
+}
+
+.select-control {
+    width: 100%;
+    padding: var(--spacing-sm) var(--spacing-md);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    background: var(--color-bg);
+    color: var(--color-text);
+    font-size: var(--font-size-sm);
+    font-family: var(--font-sans);
+    transition: var(--transition);
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%23636e72' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right var(--spacing-md) center;
+    padding-right: 2.5rem;
+}
+
+.select-control:hover {
+    border-color: var(--color-accent);
+}
+
+.select-control:focus {
+    outline: none;
+    border-color: var(--color-accent);
+    box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.1);
+}
+
+/* ===========================================
+   BOTÕES
+   =========================================== */
+
+.btn {
+    width: 100%;
+    padding: var(--spacing-sm) var(--spacing-md);
+    border: none;
+    border-radius: var(--radius);
+    font-size: var(--font-size-sm);
+    font-weight: 500;
+    font-family: var(--font-sans);
+    cursor: pointer;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-xs);
+    letter-spacing: 0.3px;
+}
+
+.btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.btn-primary {
+    background: var(--color-primary);
+    color: white;
+}
+
+.btn-primary:hover:not(:disabled) {
+    background: #000000;
+    transform: translateY(-1px);
+}
+
+.btn-secondary {
+    background: transparent;
+    color: var(--color-text);
+    border: 1px solid var(--color-border);
+}
+
+.btn-secondary:hover:not(:disabled) {
+    background: var(--color-bg-secondary);
+    border-color: var(--color-text-light);
+}
+
+.btn-success {
+    background: var(--color-success);
+    color: white;
+}
+
+.btn-success:hover:not(:disabled) {
+    background: #00a885;
+    transform: translateY(-1px);
+}
+
+/* ===========================================
+   DASHBOARD
+   =========================================== */
+
+.dashboard {
+    margin-top: var(--spacing-xl);
+    padding: var(--spacing-lg);
+    background: var(--color-bg-secondary);
+    border-radius: var(--radius);
+    border: 1px solid var(--color-border);
+}
+
+.dashboard-title {
+    font-size: var(--font-size-base);
+    font-weight: 600;
+    margin-bottom: var(--spacing-md);
+    color: var(--color-text);
+    letter-spacing: 0.3px;
+}
+
+.info-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--spacing-sm) 0;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.info-card:last-child {
+    border-bottom: none;
+}
+
+.info-label {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-light);
+    font-weight: 400;
+}
+
+.info-value {
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    color: var(--color-text);
+}
+
+/* ===========================================
+   ZONEAMENTO
+   =========================================== */
+
+.zoning-info {
+    margin-top: var(--spacing-lg);
+    padding: var(--spacing-md);
+    background: var(--color-bg);
+    border-radius: var(--radius);
+    border: 1px solid var(--color-border);
+}
+
+.zoning-title {
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    margin-bottom: var(--spacing-sm);
+    color: var(--color-text);
+}
+
+.zoning-item {
+    padding: var(--spacing-xs) 0;
+    font-size: var(--font-size-sm);
+    color: var(--color-text);
+    border-bottom: 1px solid var(--color-border);
+}
+
+.zoning-item:last-child {
+    border-bottom: none;
+}
+
+/* ===========================================
+   STATUS MESSAGES
+   =========================================== */
+
+.status-message {
+    margin-top: var(--spacing-md);
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-radius: var(--radius);
+    font-size: var(--font-size-sm);
+    font-weight: 400;
+    border-left: 3px solid;
+}
+
+.status-message.success {
+    background: rgba(0, 184, 148, 0.1);
+    border-color: var(--color-success);
+    color: var(--color-success);
+}
+
+.status-message.error {
+    background: rgba(214, 48, 49, 0.1);
+    border-color: var(--color-danger);
+    color: var(--color-danger);
+}
+
+.status-message.warning {
+    background: rgba(253, 203, 110, 0.1);
+    border-color: var(--color-warning);
+    color: #d97706;
+}
+
+/* ===========================================
+   MAPA
+   =========================================== */
+
+#map-container {
+    position: fixed;
+    left: var(--sidebar-width);
+    top: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--color-bg-secondary);
+}
+
+#map {
+    width: 100%;
+    height: 100%;
+}
+
+/* ===========================================
+   LOADING OVERLAY
+   =========================================== */
+
+.loading-overlay {
+    position: fixed;
+    left: var(--sidebar-width);
+    top: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(4px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+}
+
+.spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid var(--color-border);
+    border-top-color: var(--color-primary);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.loading-overlay p {
+    margin-top: var(--spacing-md);
+    color: var(--color-text);
+    font-size: var(--font-size-sm);
+    font-weight: 500;
+    letter-spacing: 0.3px;
+}
+
+/* ===========================================
+   UTILITIES
+   =========================================== */
+
+.hidden {
+    display: none !important;
+}
+
+/* ===========================================
+   SCROLLBAR
+   =========================================== */
+
+.sidebar::-webkit-scrollbar {
+    width: 6px;
+}
+
+.sidebar::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+    background: var(--color-border);
+    border-radius: 3px;
+}
+
+.sidebar::-webkit-scrollbar-thumb:hover {
+    background: var(--color-text-light);
+}
+
+/* ===========================================
+   RESPONSIVIDADE
+   =========================================== */
+
+@media (max-width: 768px) {
+    :root {
+        --sidebar-width: 100%;
+    }
+    
+    .sidebar {
+        position: relative;
+        height: auto;
+    }
+    
+    #map-container {
+        position: relative;
+        left: 0;
+        height: 60vh;
+    }
+}

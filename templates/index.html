@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mivita - Prospecção de Terrenos</title>
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <!-- Sidebar -->
+    <div id="sidebar" class="sidebar">
+        <div class="sidebar-header">
+            <div class="logo-container">
+                <img src="https://mivitaincorporadora.com.br/wp-content/uploads/2025/04/logo_mivita_2-1024x314.png" 
+                     alt="Mivita" 
+                     class="logo-img">
+                <p class="tagline">Prospecção de Terrenos</p>
+            </div>
+        </div>
+        
+        <div class="sidebar-content">
+            <!-- Seleção de Bairro -->
+            <div class="control-group">
+                <label for="bairro-select">Selecione o Bairro:</label>
+                <select id="bairro-select" class="select-control">
+                    <option value="">Carregando bairros...</option>
+                </select>
+            </div>
+            
+            <!-- Botões de Controle -->
+            <div class="control-group">
+                <button id="btn-carregar" class="btn btn-primary" disabled>
+                    Carregar Bairro
+                </button>
+            </div>
+            
+            <div class="control-group">
+                <button id="btn-limpar" class="btn btn-secondary">
+                    Limpar Seleção
+                </button>
+            </div>
+            
+            <div class="control-group">
+                <button id="btn-unir" class="btn btn-success" disabled>
+                    Unir Lotes (<span id="count-selected">0</span>)
+                </button>
+            </div>
+            
+            <!-- Mini Dashboard -->
+            <div id="dashboard" class="dashboard hidden">
+                <h3 class="dashboard-title">Informações</h3>
+                
+                <div class="info-card">
+                    <div class="info-label">Lotes Selecionados:</div>
+                    <div class="info-value" id="info-total-lotes">-</div>
+                </div>
+                
+                <div class="info-card">
+                    <div class="info-label">Área Total:</div>
+                    <div class="info-value" id="info-area-m2">-</div>
+                </div>
+                
+                <div class="info-card">
+                    <div class="info-label">Área (hectares):</div>
+                    <div class="info-value" id="info-area-ha">-</div>
+                </div>
+                
+                <div class="info-card">
+                    <div class="info-label">Perímetro:</div>
+                    <div class="info-value" id="info-perimetro">-</div>
+                </div>
+                
+                <div id="zoning-info" class="zoning-info hidden">
+                    <h4 class="zoning-title">Zoneamento</h4>
+                    <div id="zoning-content"></div>
+                </div>
+            </div>
+            
+            <!-- Status Messages -->
+            <div id="status-message" class="status-message hidden"></div>
+        </div>
+    </div>
+    
+    <!-- Mapa Principal -->
+    <div id="map-container">
+        <div id="map"></div>
+        
+        <!-- Loading Overlay -->
+        <div id="loading-overlay" class="loading-overlay hidden">
+            <div class="spinner"></div>
+            <p>Carregando dados...</p>
+        </div>
+    </div>
+    
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <!-- Custom JavaScript -->
+    <script>
+        // ==========================================
+        // CONFIGURAÇÕES E VARIÁVEIS GLOBAIS
+        // ==========================================
+        
+        let map;
+        let currentBairroLayer;
+        let selectedLots = [];
+        let selectedIndices = [];
+        let currentBairro = null;
+        let allLotsData = null;
+        
+        // Cores
+        const COLOR_DEFAULT = '#3388ff';
+        const COLOR_SELECTED = '#ff6b6b';
+        const COLOR_UNIFIED = '#51cf66';
+        
+        // ==========================================
+        // INICIALIZAÇÃO
+        // ==========================================
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            initMap();
+            loadBairros();
+            setupEventListeners();
+        });
+        
+        // ==========================================
+        // INICIALIZAR MAPA COM CENTRALIZAÇÃO DINÂMICA
+        // ==========================================
+        
+        async function initMap() {
+            try {
+                // Buscar bounds dos dados do servidor
+                const response = await fetch('/api/map-bounds');
+                const data = await response.json();
+                
+                let center, zoom;
+                
+                if (data.success && data.center) {
+                    // Usar centro calculado dos dados reais
+                    center = data.center;
+                    zoom = 12;
+                    console.log('Mapa centralizado nos dados:', center);
+                } else {
+                    // Fallback para Vitória, ES
+                    center = [-20.279458589125596, -40.293465958731616];
+                    zoom = 13;
+                    console.warn('Usando coordenadas padrão de Vitória, ES');
+                }
+                
+                // Inicializar mapa
+                map = L.map('map').setView(center, zoom);
+                
+                // Tile Layer
+                L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}', {
+                    attribution: '© <a href="https://www.mapbox.com/about/maps/">Mapbox</a>',
+                    maxZoom: 19,
+                    id: 'mapbox/streets-v12',
+                    tileSize: 512,
+                    zoomOffset: -1,
+                    accessToken: 'pk.eyJ1IjoiY2JhcmFjaG9taXZpdGEiLCJhIjoiY20wNnpjODN6MGFpMjJscHV4bjBqY2JybyJ9.KYq5l3mhy_hP5bN-XJbQew'
+                }).addTo(map);
+                
+                // Se temos bounds, ajustar o mapa a eles
+                if (data.success && data.bounds) {
+                    map.fitBounds(data.bounds, {
+                        padding: [50, 50],
+                        maxZoom: 14
+                    });
+                }
+                
+                console.log('✅ Mapa inicializado com sucesso');
+                
+            } catch (error) {
+                console.error('Erro ao inicializar mapa:', error);
+                // Fallback: criar mapa com coordenadas padrão
+                map = L.map('map').setView([-20.460472, -40.369384], 13);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '© OpenStreetMap contributors',
+                    maxZoom: 19
+                }).addTo(map);
+            }
+        }
+        
+        // ==========================================
+        // CARREGAR BAIRROS
+        // ==========================================
+        
+        async function loadBairros() {
+            try {
+                showLoading(true);
+                
+                const response = await fetch('/api/bairros');
+                const data = await response.json();
+                
+                if (!data.success) {
+                    showStatus('❌ ' + data.error, 'error');
+                    
+                    // Mostrar colunas disponíveis se houver
+                    if (data.available_columns) {
+                        console.log('Colunas disponíveis:', data.available_columns);
+                    }
+                    return;
+                }
+                
+                const select = document.getElementById('bairro-select');
+                select.innerHTML = '<option value="">Selecione um bairro...</option>';
+                
+                data.bairros.forEach(bairro => {
+                    const option = document.createElement('option');
+                    option.value = bairro;
+                    option.textContent = bairro;
+                    select.appendChild(option);
+                });
+                
+                document.getElementById('btn-carregar').disabled = false;
+                showStatus(`✅ ${data.total} bairros carregados`, 'success');
+                
+            } catch (error) {
+                console.error('Erro ao carregar bairros:', error);
+                showStatus('❌ Erro ao conectar com o servidor', 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+        
+        // ==========================================
+        // CARREGAR LOTES DO BAIRRO
+        // ==========================================
+        
+        async function loadBairroLotes() {
+            const bairro = document.getElementById('bairro-select').value;
+            
+            if (!bairro) {
+                showStatus('⚠️ Selecione um bairro primeiro', 'warning');
+                return;
+            }
+            
+            try {
+                showLoading(true);
+                clearSelection();
+                
+                const response = await fetch(`/api/lotes/${encodeURIComponent(bairro)}`);
+                const data = await response.json();
+                
+                if (!data.success) {
+                    showStatus('❌ ' + data.error, 'error');
+                    return;
+                }
+                
+                currentBairro = bairro;
+                allLotsData = data.geojson;
+                
+                // Remover layer anterior
+                if (currentBairroLayer) {
+                    map.removeLayer(currentBairroLayer);
+                }
+                
+                // Adicionar lotes ao mapa
+                currentBairroLayer = L.geoJSON(data.geojson, {
+                    style: function() {
+                        return {
+                            color: COLOR_DEFAULT,
+                            weight: 2,
+                            fillOpacity: 0.3
+                        };
+                    },
+                    onEachFeature: function(feature, layer) {
+                        // Tooltip
+                        let tooltipContent = `<b>Lote ${feature.id || 'N/A'}</b>`;
+                        layer.bindTooltip(tooltipContent);
+                        
+                        // Clique para selecionar
+                        layer.on('click', function(e) {
+                            toggleLotSelection(layer, feature.id);
+                            L.DomEvent.stopPropagation(e);
+                        });
+                        
+                        // Hover
+                        layer.on('mouseover', function() {
+                            if (!isLotSelected(feature.id)) {
+                                this.setStyle({ weight: 3, fillOpacity: 0.5 });
+                            }
+                        });
+                        
+                        layer.on('mouseout', function() {
+                            if (!isLotSelected(feature.id)) {
+                                this.setStyle({ weight: 2, fillOpacity: 0.3 });
+                            }
+                        });
+                    }
+                }).addTo(map);
+                
+                // Ajustar zoom aos lotes do bairro
+                map.fitBounds(currentBairroLayer.getBounds(), {
+                    padding: [50, 50],
+                    maxZoom: 16
+                });
+                
+                showStatus(`✅ ${data.total_lotes} lotes carregados do bairro ${bairro}`, 'success');
+                
+            } catch (error) {
+                console.error('Erro ao carregar lotes:', error);
+                showStatus('❌ Erro ao carregar lotes', 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+        
+        // ==========================================
+        // SELEÇÃO DE LOTES
+        // ==========================================
+        
+        function toggleLotSelection(layer, featureId) {
+            const index = selectedLots.indexOf(layer);
+            
+            if (index > -1) {
+                // Desselecionar
+                selectedLots.splice(index, 1);
+                selectedIndices.splice(selectedIndices.indexOf(featureId), 1);
+                layer.setStyle({
+                    color: COLOR_DEFAULT,
+                    weight: 2,
+                    fillOpacity: 0.3
+                });
+            } else {
+                // Selecionar
+                selectedLots.push(layer);
+                selectedIndices.push(featureId);
+                layer.setStyle({
+                    color: COLOR_SELECTED,
+                    weight: 3,
+                    fillOpacity: 0.6
+                });
+            }
+            
+            updateSelectionUI();
+        }
+        
+        function isLotSelected(featureId) {
+            return selectedIndices.includes(featureId);
+        }
+        
+        function updateSelectionUI() {
+            const count = selectedLots.length;
+            document.getElementById('count-selected').textContent = count;
+            document.getElementById('btn-unir').disabled = count === 0;
+        }
+        
+        function clearSelection() {
+            selectedLots.forEach(layer => {
+                layer.setStyle({
+                    color: COLOR_DEFAULT,
+                    weight: 2,
+                    fillOpacity: 0.3
+                });
+            });
+            
+            selectedLots = [];
+            selectedIndices = [];
+            updateSelectionUI();
+            hideDashboard();
+        }
+        
+        // ==========================================
+        // UNIR LOTES
+        // ==========================================
+        
+        async function unirLotes() {
+            if (selectedIndices.length === 0) {
+                showStatus('⚠️ Selecione pelo menos um lote', 'warning');
+                return;
+            }
+            
+            try {
+                showLoading(true);
+                
+                const response = await fetch('/api/unir-lotes', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        indices: selectedIndices
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (!data.success) {
+                    showStatus('❌ ' + data.error, 'error');
+                    return;
+                }
+                
+                // Mostrar geometria unida
+                const unifiedLayer = L.geoJSON(data.geometry, {
+                    style: {
+                        color: COLOR_UNIFIED,
+                        weight: 4,
+                        fillOpacity: 0.4
+                    }
+                }).addTo(map);
+                
+                // Zoom na área unida
+                map.fitBounds(unifiedLayer.getBounds(), {
+                    padding: [50, 50]
+                });
+                
+                // Atualizar dashboard
+                updateDashboard(data.info);
+                
+                showStatus(`✅ ${data.total_lotes_unidos} lotes unidos com sucesso`, 'success');
+                
+            } catch (error) {
+                console.error('Erro ao unir lotes:', error);
+                showStatus('❌ Erro ao unir lotes', 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+        
+        // ==========================================
+        // DASHBOARD
+        // ==========================================
+        
+        function updateDashboard(info) {
+            document.getElementById('info-total-lotes').textContent = info.total_lotes;
+            document.getElementById('info-area-m2').textContent = 
+                info.area_total_m2.toLocaleString('pt-BR', {maximumFractionDigits: 2}) + ' m²';
+            document.getElementById('info-area-ha').textContent = 
+                info.area_total_hectares.toLocaleString('pt-BR', {maximumFractionDigits: 4}) + ' ha';
+            document.getElementById('info-perimetro').textContent = 
+                info.perimetro_m.toLocaleString('pt-BR', {maximumFractionDigits: 2}) + ' m';
+            
+            // Zoneamento
+            if (info.zoneamento && Object.keys(info.zoneamento).length > 0) {
+                const zoningContent = document.getElementById('zoning-content');
+                zoningContent.innerHTML = '';
+                
+                for (const [key, value] of Object.entries(info.zoneamento)) {
+                    const item = document.createElement('div');
+                    item.className = 'zoning-item';
+                    item.innerHTML = `<strong>${key}:</strong> ${JSON.stringify(value)}`;
+                    zoningContent.appendChild(item);
+                }
+                
+                document.getElementById('zoning-info').classList.remove('hidden');
+            }
+            
+            document.getElementById('dashboard').classList.remove('hidden');
+        }
+        
+        function hideDashboard() {
+            document.getElementById('dashboard').classList.add('hidden');
+            document.getElementById('zoning-info').classList.add('hidden');
+        }
+        
+        // ==========================================
+        // UI HELPERS
+        // ==========================================
+        
+        function showLoading(show) {
+            const overlay = document.getElementById('loading-overlay');
+            if (show) {
+                overlay.classList.remove('hidden');
+            } else {
+                overlay.classList.add('hidden');
+            }
+        }
+        
+        function showStatus(message, type = 'info') {
+            const statusEl = document.getElementById('status-message');
+            statusEl.textContent = message;
+            statusEl.className = `status-message ${type}`;
+            statusEl.classList.remove('hidden');
+            
+            setTimeout(() => {
+                statusEl.classList.add('hidden');
+            }, 5000);
+        }
+        
+        // ==========================================
+        // EVENT LISTENERS
+        // ==========================================
+        
+        function setupEventListeners() {
+            document.getElementById('btn-carregar').addEventListener('click', loadBairroLotes);
+            document.getElementById('btn-limpar').addEventListener('click', clearSelection);
+            document.getElementById('btn-unir').addEventListener('click', unirLotes);
+        }
+        
+    </script>
+</body>
+</html>

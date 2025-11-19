@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mivita - Relatório de Análise</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        body {
+            background: #f3f4f6;
+            overflow: auto;
+        }
+        
+        .report-container {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 40px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        
+        .report-header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #1e3a8a;
+        }
+        
+        .report-header h1 {
+            color: #1e3a8a;
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+        
+        .report-header p {
+            color: #6b7280;
+            font-size: 16px;
+        }
+        
+        .report-section {
+            margin-bottom: 30px;
+        }
+        
+        .report-section h2 {
+            color: #1e3a8a;
+            font-size: 24px;
+            margin-bottom: 15px;
+        }
+        
+        .report-section p {
+            color: #374151;
+            line-height: 1.6;
+            font-size: 16px;
+        }
+        
+        .back-button {
+            display: inline-block;
+            padding: 12px 24px;
+            background: #1e3a8a;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .back-button:hover {
+            background: #1e40af;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(30, 58, 138, 0.4);
+        }
+    </style>
+</head>
+<body>
+    <div class="report-container">
+        <div class="report-header">
+            <h1>📊 Relatório de Análise de Terrenos</h1>
+            <p>Sistema Mivita - Prospecção Inteligente</p>
+        </div>
+        
+        <div class="report-section">
+            <h2>Sobre o Relatório</h2>
+            <p>
+                Esta página está preparada para exibir relatórios detalhados de análise
+                de terrenos. Os relatórios incluirão informações sobre:
+            </p>
+            <ul>
+                <li>Análise de viabilidade construtiva</li>
+                <li>Informações de zoneamento</li>
+                <li>Cálculos de potencial construtivo</li>
+                <li>Estudos de mercado local</li>
+                <li>Recomendações técnicas</li>
+            </ul>
+        </div>
+        
+        <div class="report-section">
+            <a href="/" class="back-button">← Voltar ao Mapa</a>
+        </div>
+    </div>
+</body>
+</html>
